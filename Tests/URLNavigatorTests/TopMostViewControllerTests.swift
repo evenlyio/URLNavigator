@@ -1,4 +1,4 @@
-#if os(iOS) || os(tvOS)
+#if os(iOS) || os(visionOS) || os(tvOS)
 import XCTest
 
 import URLNavigator
@@ -14,7 +14,11 @@ final class TopMostViewControllerTests: XCTestCase {
   override func setUp() {
     super.setUp()
 
-    window = UIWindow(frame: UIScreen.main.bounds)
+#if os(visionOS)
+      window = UIWindow(frame: .init(x: 0, y: 0, width: 640, height: 480))
+#else
+      window = UIWindow(frame: UIScreen.main.bounds)
+#endif
     Self.currentWindow = window
   }
 
