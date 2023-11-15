@@ -7,18 +7,25 @@ extension UIViewController {
     return UIApplication.perform(selector)?.takeUnretainedValue() as? UIApplication
   }
 
+  private class var keyWindow: UIWindow? {
+    if #available(iOS 15.0, *) {
+      return UIApplication.shared
+          .connectedScenes
+          .compactMap { $0 as? UIWindowScene }
+          // HACK: the scene's keyWindow is not part of the windows array of a scene
+          // on visionOS + SwiftUI app lifecycle.
+          .filter { $0.activationState == .foregroundActive }
+          .first { $0.keyWindow != nil }
+          .flatMap { $0.windows.first }
+    } else {
+        return (self.sharedApplication?.windows ?? [])
+            .first(where: { $0.isKeyWindow })
+    }
+  }
+
   /// Returns the current application's top most view controller.
   public class var topMost: UIViewController? {
-    guard let currentWindows = self.sharedApplication?.windows else { return nil }
-    var rootViewController: UIViewController?
-    for window in currentWindows {
-      if let windowRootViewController = window.rootViewController, window.isKeyWindow {
-        rootViewController = windowRootViewController
-        break
-      }
-    }
-
-    return self.topMost(of: rootViewController)
+    return self.topMost(of: keyWindow?.rootViewController)
   }
 
   /// Returns the top most view controller from given view controller's stack.
